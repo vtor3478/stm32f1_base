@@ -14,7 +14,7 @@
 #define OLED_SCL_Clr() GPIO_ResetBits(GPIOA,GPIO_Pin_5)//SCL
 #define OLED_SCL_Set() GPIO_SetBits(GPIOA,GPIO_Pin_5)
 
-#define OLED_SDA_Clr() GPIO_ResetBits(GPIOA,GPIO_Pin_7)//DIN
+#define OLED_SDA_Clr() GPIO_ResetBits(GPIOA,GPIO_Pin_7)//SDA
 #define OLED_SDA_Set() GPIO_SetBits(GPIOA,GPIO_Pin_7)
 
 #define OLED_RES_Clr() GPIO_ResetBits(GPIOD,GPIO_Pin_2)//RES
