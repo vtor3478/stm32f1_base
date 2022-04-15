@@ -3,23 +3,25 @@
 
 #include "sys.h"
 #include "stdlib.h"	
+#include "iic/soft_iic_if.h"
 
+
+void(oled_iic_scl_write)(unsigned char val);
+void(oled_iic_sda_write)(unsigned char val);
+unsigned char(oled_iic_sda_read)(void);
 //-----------------测试LED端口定义---------------- 
 
-#define LED_ON GPIO_ResetBits(GPIOC,GPIO_Pin_12)
-#define LED_OFF GPIO_SetBits(GPIOC,GPIO_Pin_12)
+#define SCL_PORT		GPIOA
+#define SCL_PIN			GPIO_Pin_5
+#define SDA_PORT		GPIOA
+#define SDA_PIN			GPIO_Pin_7
 
-//-----------------OLED端口定义---------------- 
 
-#define OLED_SCL_Clr() GPIO_ResetBits(GPIOA,GPIO_Pin_5)//SCL
-#define OLED_SCL_Set() GPIO_SetBits(GPIOA,GPIO_Pin_5)
+#define OLED_SCL_Clr() GPIO_ResetBits(SCL_PORT,SCL_PIN)//SCL
+#define OLED_SCL_Set() GPIO_SetBits(SCL_PORT,SCL_PIN)
 
-#define OLED_SDA_Clr() GPIO_ResetBits(GPIOA,GPIO_Pin_7)//SDA
-#define OLED_SDA_Set() GPIO_SetBits(GPIOA,GPIO_Pin_7)
-
-#define OLED_RES_Clr() GPIO_ResetBits(GPIOD,GPIO_Pin_2)//RES
-#define OLED_RES_Set() GPIO_SetBits(GPIOD,GPIO_Pin_2)
-
+#define OLED_SDA_Clr() GPIO_ResetBits(SDA_PORT,SDA_PIN)//SDA
+#define OLED_SDA_Set() GPIO_SetBits(SDA_PORT,SDA_PIN)
 
 #define OLED_CMD  0	//写命令
 #define OLED_DATA 1	//写数据
@@ -27,10 +29,6 @@
 void OLED_ClearPoint(u8 x,u8 y);
 void OLED_ColorTurn(u8 i);
 void OLED_DisplayTurn(u8 i);
-void I2C_Start(void);
-void I2C_Stop(void);
-void I2C_WaitAck(void);
-void Send_Byte(u8 dat);
 void OLED_WR_Byte(u8 dat,u8 mode);
 void OLED_DisPlay_On(void);
 void OLED_DisPlay_Off(void);
@@ -47,6 +45,8 @@ void OLED_ShowChinese(u8 x,u8 y,u8 num,u8 size1,u8 mode);
 void OLED_ScrollDisplay(u8 num,u8 space,u8 mode);
 void OLED_ShowPicture(u8 x,u8 y,u8 sizex,u8 sizey,u8 BMP[],u8 mode);
 void OLED_Init(void);
+
+void OLED_I2C_Init(IIC_IF *IIC_If);
 
 #endif
 

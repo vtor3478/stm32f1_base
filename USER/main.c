@@ -29,15 +29,22 @@
 #include "sys.h"
 #include "oled.h"
 #include "bmp.h"
+#include "iic/soft_iic_if.h"
 
 int main(void)
 {
 	u8 t=' ';
 	delay_init();
+	
+	iic_remap(
+		oled_iic_scl_write,
+		oled_iic_sda_write,
+		oled_iic_sda_read);
+	OLED_I2C_Init(&softIicIf);
 	OLED_Init();
 	OLED_ColorTurn(0);//0正常显示，1 反色显示
   OLED_DisplayTurn(0);//0正常显示 1 屏幕翻转显示
-	LED_ON;
+	
 	while(1)
 	{
 		OLED_ShowPicture(0,0,128,64,BMP1,1);

@@ -2,8 +2,41 @@
 #include "stdlib.h"
 #include "oledfont.h"  	 
 #include "delay.h"
-
+#include "string.h"
+#include "iic/soft_iic_if.h"
+IIC_IF iicIf;
 u8 OLED_GRAM[144][8];
+
+
+void(oled_iic_scl_write)(unsigned char val)
+{
+	val 
+	? GPIO_SetBits(GPIOA,GPIO_Pin_5)
+	: GPIO_ResetBits(GPIOA,GPIO_Pin_5);
+}
+
+void(oled_iic_sda_write)(unsigned char val)
+{
+	val 
+	?	OLED_SDA_Set()
+	: OLED_SDA_Clr();
+}
+
+unsigned char(oled_iic_sda_read)(void)
+{
+	return GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_7);
+}
+
+void OLED_I2C_Init(IIC_IF *_iicIf)
+{
+	iicIf.Start = _iicIf->Start;
+	iicIf.Stop = _iicIf->Stop;
+	iicIf.WriteByte = _iicIf->WriteByte;
+	iicIf.ReadByte = _iicIf->ReadByte;
+	iicIf.SendAck = _iicIf->SendAck;
+	iicIf.SendNAck = _iicIf->SendNAck;
+	iicIf.WaitAck = _iicIf->WaitAck;
+}
 
 //反显函数
 void OLED_ColorTurn(u8 i)
@@ -33,80 +66,20 @@ void OLED_DisplayTurn(u8 i)
 		}
 }
 
-//延时
-void IIC_delay(void)
-{
-	u8 t=3;
-	while(t--);
-}
-
-//起始信号
-void I2C_Start(void)
-{
-	OLED_SDA_Set();
-	OLED_SCL_Set();
-	IIC_delay();
-	OLED_SDA_Clr();
-	IIC_delay();
-	OLED_SCL_Clr();
-	IIC_delay();
-}
-
-//结束信号
-void I2C_Stop(void)
-{
-	OLED_SDA_Clr();
-	OLED_SCL_Set();
-	IIC_delay();
-	OLED_SDA_Set();
-}
-
-//等待信号响应
-void I2C_WaitAck(void) //测数据信号的电平
-{
-	OLED_SDA_Set();
-	IIC_delay();
-	OLED_SCL_Set();
-	IIC_delay();
-	OLED_SCL_Clr();
-	IIC_delay();
-}
-
-//写入一个字节
-void Send_Byte(u8 dat)
-{
-	u8 i;
-	for(i=0;i<8;i++)
-	{
-		if(dat&0x80)//将dat的8位从最高位依次写入
-		{
-			OLED_SDA_Set();
-    }
-		else
-		{
-			OLED_SDA_Clr();
-    }
-		IIC_delay();
-		OLED_SCL_Set();
-		IIC_delay();
-		OLED_SCL_Clr();//将时钟信号设置为低电平
-		dat<<=1;
-  }
-}
 
 //发送一个字节
 //mode:数据/命令标志 0,表示命令;1,表示数据;
 void OLED_WR_Byte(u8 dat,u8 mode)
 {
-	I2C_Start();
-	Send_Byte(0x78);
-	I2C_WaitAck();
-	if(mode){Send_Byte(0x40);}
-  else{Send_Byte(0x00);}
-	I2C_WaitAck();
-	Send_Byte(dat);
-	I2C_WaitAck();
-	I2C_Stop();
+	iicIf.Start();
+	iicIf.WriteByte(0x78);
+	iicIf.WaitAck();
+	if(mode){OLED_if.WriteByte(0x40);}
+  else{OLED_if.WriteByte(0x00);}
+	iicIf.WaitAck();
+	iicIf.WriteByte(dat);
+	iicIf.WaitAck();
+	iicIf.Stop();
 }
 
 //开启OLED显示 
@@ -134,17 +107,17 @@ void OLED_Refresh(void)
 		OLED_WR_Byte(0xb0+i,OLED_CMD); //设置行起始地址
 		OLED_WR_Byte(0x00,OLED_CMD);   //设置低列起始地址
 		OLED_WR_Byte(0x10,OLED_CMD);   //设置高列起始地址
-		I2C_Start();
-		Send_Byte(0x78);
-		I2C_WaitAck();
-		Send_Byte(0x40);
-		I2C_WaitAck();
+		iicIf.Start();
+		iicIf.WriteByte(0x78);
+		iicIf.WaitAck();
+		iicIf.WriteByte(0x40);
+		iicIf.WaitAck();
 		for(n=0;n<128;n++)
 		{
-			Send_Byte(OLED_GRAM[n][i]);
-			I2C_WaitAck();
+			OLED_if.WriteByte(OLED_GRAM[n][i]);
+			OLED_if.WaitAck();
 		}
-		I2C_Stop();
+		OLED_if.Stop();
   }
 }
 //清屏函数

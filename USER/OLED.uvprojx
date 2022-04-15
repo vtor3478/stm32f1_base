@@ -408,9 +408,14 @@
               <FilePath>..\HARDWARE\OLED\oled.c</FilePath>
             </File>
             <File>
-              <FileName>hmc5883l.c</FileName>
+              <FileName>soft_iic_if.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\HARDWARE\hmc5883l\hmc5883l.c</FilePath>
+              <FilePath>..\HARDWARE\iic\soft_iic_if.c</FilePath>
+            </File>
+            <File>
+              <FileName>delay.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\delay\delay.c</FilePath>
             </File>
           </Files>
         </Group>
