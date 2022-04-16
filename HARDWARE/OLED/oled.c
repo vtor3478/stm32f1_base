@@ -1,8 +1,10 @@
 #include "oled.h"
 #include "stdlib.h"
+#include "stdio.h"
 #include "oledfont.h"  	 
 #include "delay.h"
 #include "string.h"
+#include "stdarg.h"	 	 
 #include "iic/soft_iic_if.h"
 IIC_IF iicIf;
 u8 OLED_GRAM[144][8];
@@ -74,8 +76,8 @@ void OLED_WR_Byte(u8 dat,u8 mode)
 	iicIf.Start();
 	iicIf.WriteByte(0x78);
 	iicIf.WaitAck();
-	if(mode){OLED_if.WriteByte(0x40);}
-  else{OLED_if.WriteByte(0x00);}
+	if(mode){iicIf.WriteByte(0x40);}
+  else{iicIf.WriteByte(0x00);}
 	iicIf.WaitAck();
 	iicIf.WriteByte(dat);
 	iicIf.WaitAck();
@@ -114,10 +116,10 @@ void OLED_Refresh(void)
 		iicIf.WaitAck();
 		for(n=0;n<128;n++)
 		{
-			OLED_if.WriteByte(OLED_GRAM[n][i]);
-			OLED_if.WaitAck();
+			iicIf.WriteByte(OLED_GRAM[n][i]);
+			iicIf.WaitAck();
 		}
-		OLED_if.Stop();
+		iicIf.Stop();
   }
 }
 //清屏函数
@@ -144,7 +146,10 @@ void OLED_DrawPoint(u8 x,u8 y,u8 t)
 	i=y/8;
 	m=y%8;
 	n=1<<m;
-	if(t){OLED_GRAM[x][i]|=n;}
+	if(t)
+	{
+		OLED_GRAM[x][i]|=n;
+	}
 	else
 	{
 		OLED_GRAM[x][i]=~OLED_GRAM[x][i];
@@ -266,15 +271,49 @@ void OLED_ShowChar(u8 x,u8 y,u8 chr,u8 size1,u8 mode)
 //mode:0,反色显示;1,正常显示
 void OLED_ShowString(u8 x,u8 y,u8 *chr,u8 size1,u8 mode)
 {
-	while((*chr>=' ')&&(*chr<='~'))//判断是不是非法字符!
+	while((*chr>=' ')&&(*chr<='~') || *chr=='\n' || *chr=='\r')//判断是不是非法字符!
 	{
+		if ('\n' == *chr)
+		{
+			chr++;
+			x = 0;
+			y += 8;
+			if (y >= 64-8) y = 0;
+			continue;
+		}
 		OLED_ShowChar(x,y,*chr,size1,mode);
 		if(size1==8)x+=6;
 		else x+=size1/2;
+		// 自动换行，避免后面显示不全
+		if (x >= 128)
+		{
+			x = 0;
+			y+=8;
+			if (y >= 64-8) y = 0;
+		}
 		chr++;
   }
 }
+void OLED_Printf(unsigned char x,unsigned char y,char* fmt,...)
+{
+	char oledBuffer[128];
+	va_list ap;
+	va_start(ap,fmt);
+	vsprintf((char*)oledBuffer,fmt,ap);
+	va_end(ap);
+	OLED_ShowString(x,y,(unsigned char*)oledBuffer,8,1);
+}
 
+void OLED_Printf00(char *fmt,...)
+{
+	va_list ap;
+	va_start(ap,fmt);
+	char oledBuffer[128];
+	vsprintf((char*)oledBuffer,fmt,ap);
+	va_end(ap);
+	OLED_ShowString(0,0,(unsigned char*)oledBuffer,8,1);
+	
+}
 //m^n
 u32 OLED_Pow(u8 m,u8 n)
 {
@@ -429,11 +468,6 @@ void OLED_Init(void)
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;//速度50MHz
  	GPIO_Init(GPIOA, &GPIO_InitStructure);	  
  	GPIO_SetBits(GPIOA,GPIO_Pin_4|GPIO_Pin_5|GPIO_Pin_6|GPIO_Pin_7);
-	
-	
-	OLED_RES_Clr();
-	delay_ms(200);
-	OLED_RES_Set();
 	
 	OLED_WR_Byte(0xAE,OLED_CMD);//--turn off oled panel
 	OLED_WR_Byte(0x00,OLED_CMD);//---set low column address

@@ -47,6 +47,8 @@ void OLED_ShowPicture(u8 x,u8 y,u8 sizex,u8 sizey,u8 BMP[],u8 mode);
 void OLED_Init(void);
 
 void OLED_I2C_Init(IIC_IF *IIC_If);
+void OLED_Printf(unsigned char x,unsigned char y,char* fmt,...);
+void OLED_Printf00(char* fmt,...);
 
 #endif
 
